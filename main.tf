@@ -1,9 +1,7 @@
-# Логинюсь в AWS , кдючи нужно спрятать в переменные.  
-provider "aws" {
-  region     = "eu-west-3"
-  access_key = "AKIXXXXXXXXXXXXXXX"
-  secret_key = "3AkQwFI8w6XsICuxxxxxxxxxxxxxx"
-}
+# export AWS_ACCESS_KEY_ID="myAKI"
+# export AWS_SECRET_ACCESS_KEY="mySAK"
+# export AWS_DEFAULT_REGION="eu-west-3"
+
 
 #Создал глобальную VPC , в ней будет две посети Public, Private
 resource "aws_vpc" "global-vpc" {
@@ -93,5 +91,40 @@ resource "aws_security_group" "global-sg" {
 
   tags = {
     Name = "ssh-web-sg"
+  }
+}
+
+# Find last wersion ubuntu  
+
+data "aws_ami" "ubuntu-latest" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical 
+}
+
+# Added IC2 instance
+
+resource "aws_instance" "web-server" {
+  ami           = data.aws_ami.ubuntu-latest.id
+  instance_type = "t2.micro"
+  subnet_id = aws_subnet.front-end-net.id
+  vpc_security_group_ids = [aws_security_group.global-sg.id]
+  associate_public_ip_address = true
+
+  key_name = "terraform"
+  
+ 
+  tags = {
+    Name = "web-server"
   }
 }
