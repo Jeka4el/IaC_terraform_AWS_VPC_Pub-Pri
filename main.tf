@@ -128,3 +128,9 @@ resource "aws_instance" "web-server" {
     Name = "web-server"
   }
 }
+
+# Showed ip of instance 
+
+output "ec2_public_ip" {
+  value = aws_instance.web-server.public_ip
+}
