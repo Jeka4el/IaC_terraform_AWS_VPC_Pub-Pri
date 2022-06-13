@@ -134,3 +134,59 @@ resource "aws_instance" "web-server" {
 output "ec2_public_ip" {
   value = aws_instance.web-server.public_ip
 }
+
+# Created NAT Gateway
+# wish elastic IP
+
+resource "aws_eip" "nat_gateway" {
+  vpc = true
+}
+
+ resource "aws_nat_gateway" "global-nat-gateway" {
+  allocation_id = aws_eip.nat_gateway.id
+  subnet_id = aws_subnet.front-end-net.id
+  tags = {
+    "Name" = "global nat gateway"
+  }
+}
+
+# Created route table for  NAT
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table
+
+resource "aws_route_table" "global-rt-nat" {
+  vpc_id = aws_vpc.global-vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_nat_gateway.global-nat-gateway.id
+  } 
+
+  tags = {
+    Name = "global-rt-back"
+  }
+}
+
+# connected  Back to route table
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association
+
+resource "aws_route_table_association" "a-back-net" {
+  subnet_id      = aws_subnet.back-end-net.id
+  route_table_id = aws_route_table.global-rt-nat.id
+}
+
+# Created inctance in back 
+
+resource "aws_instance" "web-server-back" {
+  ami           = data.aws_ami.ubuntu-latest.id
+  instance_type = "t2.micro"
+  subnet_id = aws_subnet.back-end-net.id
+  vpc_security_group_ids = [aws_security_group.global-sg.id]
+  #associate_public_ip_address = true
+
+  key_name = "terraform" 
+  
+
+  tags = {
+    Name = "web-server-back"
+  }
+}
