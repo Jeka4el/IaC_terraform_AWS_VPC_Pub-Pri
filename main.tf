@@ -31,4 +31,25 @@ resource "aws_subnet" "back-end-net" {
   }
 }
 
+# Created internet_gateway
+resource "aws_internet_gateway" "global-GW" {
+  vpc_id = aws_vpc.global-vpc.id
 
+  tags = {
+    Name = "Global-GW"
+  }
+}
+
+# Created route_table
+resource "aws_route_table" "global-RT" {
+  vpc_id = aws_vpc.global-vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.global-GW.id
+  } 
+
+  tags = {
+    Name = "global-RT-Front"
+  }
+}
