@@ -53,3 +53,11 @@ resource "aws_route_table" "global-RT" {
     Name = "global-RT-Front"
   }
 }
+
+# Made subnet association
+
+resource "aws_route_table_association" "a-front-net" {
+  subnet_id      = aws_subnet.front-end-net.id
+  route_table_id = aws_route_table.global-RT.id
+}
+
